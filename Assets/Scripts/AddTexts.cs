@@ -12,17 +12,11 @@ public class AddTexts : MonoBehaviour
     public void AddText(int index, string word, float rank)
     {
         if(index < showOnlyTop){
-            GameObject textObject;
-            textObject = Instantiate(text, Vector3.zero, Quaternion.identity, rt);
+            GameObject textObject = Instantiate(text, Vector3.zero, Quaternion.identity, rt);
             var textMesh = textObject.GetComponent<TextMeshProUGUI>();
             textObject.GetComponent<RectTransform>().SetSiblingIndex(index);
-
-            //! check for bad words
-            if(WordleData.censorBadWords && WordleSolver.badWords.Contains(word))
-                textMesh.text = string.Format("{0:n2}", word) + "***\t" + rank;
-            else textMesh.text = word + "\t" + rank;
-
             textObject.name = word;
+            textMesh.text = word + "\t" + rank;
             for (int i = showOnlyTop; i < rt.childCount; i++)
                 Destroy(rt.GetChild(i).gameObject);
         }

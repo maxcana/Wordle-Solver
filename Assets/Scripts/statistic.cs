@@ -9,7 +9,7 @@ using System.Linq;
 public class statistic : MonoBehaviour
 {
     [SerializeField] public StatisticMode statToGet;
-    public enum StatisticMode { Accuracy, Bar, Iterations, WordsTried, TopXWords, SecretsLeft, PossibleWords, CurrentlyTriedWord, None }
+    public enum StatisticMode { Accuracy, Bar, Iterations, WordsTried, TopXWords, SecretsLeft, PossibleWords, Speed, None }
     TextMeshProUGUI textMesh;
     Image img;
     AddTexts addTexts;
@@ -25,14 +25,14 @@ public class statistic : MonoBehaviour
         switch (statToGet)
         {
             case StatisticMode.Accuracy:
-                textMesh.SetText(string.Format("Accuracy: <mspace=mspace=36>{0:n7}</mspace>", ((double)WordleSolver.wordComparisons / (double)WordleSolver.totalWordComparisons) * 100) + "%");
+                textMesh.SetText(string.Format("Accuracy: <mspace=mspace=36>{0:n7}</mspace>", ((double)WordleSolver.currentIteration / (double)WordleSolver.iterationCount) * 100) + "%");
                 break;
             case StatisticMode.Bar:
-                img.fillAmount = (float)WordleSolver.wordComparisons / (float)WordleSolver.totalWordComparisons;
+                img.fillAmount = (float)WordleSolver.currentIteration / (float)WordleSolver.iterationCount;
                 break;
 
             case StatisticMode.Iterations:
-                textMesh.text = WordleSolver.wordComparisons + "/" + WordleSolver.totalWordComparisons + " comparisons";
+                textMesh.text = WordleSolver.currentIteration + "/" + WordleSolver.iterationCount + " iterations";
                 break;
 
             case StatisticMode.WordsTried:
@@ -56,16 +56,10 @@ public class statistic : MonoBehaviour
                 break;
 
             case StatisticMode.PossibleWords:
-                textMesh.text = WordleSolver.possibleSecrets.Count > 400 ? string.Join(", ", WordleData.censorBadWords ? WordleSolver.censoredPossibleSecrets.Take(400)  : WordleSolver.possibleSecrets.Take(400)) + " + " + (WordleSolver.possibleSecrets.Count - 400).ToString() + " more" : string.Join(", ", WordleSolver.possibleSecrets);
+                textMesh.text = WordleSolver.possibleSecrets.Count > 400 ? string.Join(", ", WordleSolver.possibleSecrets.Take(400)) + " + " + (WordleSolver.possibleSecrets.Count - 400).ToString() + " more" : string.Join(", ", WordleSolver.possibleSecrets);
                 break;
-            case StatisticMode.CurrentlyTriedWord:
-                if(WordleSolver.currentlyTriedWord != ""){
-                    if(WordleData.censorBadWords && WordleSolver.badWords.Contains(WordleSolver.currentlyTriedWord)){
-                        textMesh.text = "Currently trying: " + string.Format("{0:n2}", WordleSolver.currentlyTriedWord) + "***";
-                    }
-                    textMesh.text = "Currently trying: " + WordleSolver.currentlyTriedWord;
-                }
-                else textMesh.text = "";
+            case StatisticMode.Speed:
+                textMesh.text = string.Format("{0:n3}</mspace>", (WordleSolver.currentWordsTriedPerSecond) + " words/sec");
                 break;
 
             case StatisticMode.None:

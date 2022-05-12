@@ -7,10 +7,6 @@ TagManager:
   - Wordle Data
   - Content
   - Instantiater
-  - Squares
-  - SolverToggle
-  - SolverStuff
-  - BadWordsToggle
   layers:
   - Default
   - TransparentFX
