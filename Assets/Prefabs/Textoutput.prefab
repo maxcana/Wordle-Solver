@@ -164,7 +164,7 @@ GameObject:
   - component: {fileID: 7873316054203421758}
   m_Layer: 5
   m_Name: Textoutput
-  m_TagString: Untagged
+  m_TagString: GuessStat
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

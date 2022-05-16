@@ -11,6 +11,8 @@ TagManager:
   - SolverToggle
   - SolverStuff
   - BadWordsToggle
+  - GuessStatsToggle
+  - GuessStat
   layers:
   - Default
   - TransparentFX

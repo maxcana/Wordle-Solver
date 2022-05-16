@@ -7,11 +7,13 @@ using UnityEngine.UIElements;
 using System.Threading.Tasks;
 using System.Threading;
 using BitStuff;
+using UnityEngine.SceneManagement;
 
 public class WordleData : MonoBehaviour
 {
     //Global Variables
     public enum Mode { Wordle, eldroW, Hardle }
+    public static bool calcGuessStats;
     public static bool censorBadWords = false;
     public static bool hasSolver;
     public static Mode mode;
@@ -23,22 +25,28 @@ public class WordleData : MonoBehaviour
     public static int wordLength = 5;
     public static string currentGuessWord = new string(' ', wordLength);
     public static int currentLetterToEdit = 0;
-    public static List<string> guesses = new List<string> { };
-    public static List<List<WordleSolver.Colour>> colours = new List<List<WordleSolver.Colour>> { };
+    public static int currentColourToEdit = 0;
+    public static List<string> guesses;
+    public static List<List<WordleSolver.Colour>> colours;
     public IDictionary<char, WordleSolver.CharKnowledge> knowledge;
     public static string secret;
+    private void Awake()
+    {
+        currentColourToEdit = 0;
+        guesses = new List<string> { };
+        colours = new List<List<WordleSolver.Colour>> { };
+
+        if (mode != Mode.eldroW)
+            secret = censorBadWords ? WordleSolver.dictionaryWithoutBadWords[UnityEngine.Random.Range(0, WordleSolver.dictionaryWithoutBadWords.Count)] : WordleSolver.dictionary[UnityEngine.Random.Range(0, WordleSolver.dictionary.Count)];
+
+        InitailizeGuessesAndColours();
+    }
     private void Start()
     {
-        var missingColours = mode == Mode.eldroW ? new List<WordleSolver.Colour>(wordLength) : null;
-
-        if (mode == Mode.eldroW)
-            for (int i = 0; i < wordLength; i++)
-            {
-                missingColours.Add(WordleSolver.Colour.Missing);
-            }
-        else{
-            secret = censorBadWords ? WordleSolver.dictionaryWithoutBadWords[UnityEngine.Random.Range(0, WordleSolver.dictionaryWithoutBadWords.Count)] : WordleSolver.dictionary[UnityEngine.Random.Range(0, WordleSolver.dictionary.Count)];
-        }
+    }
+    public static void InitailizeGuessesAndColours()
+    {
+        var missingColours = GetMissingColours();
 
         for (int i = 0; i < 6; i++)
         {
@@ -50,8 +58,20 @@ public class WordleData : MonoBehaviour
             }
         }
     }
+    public static List<WordleSolver.Colour> GetMissingColours()
+    {
+        var missingColours = mode == Mode.eldroW ? new List<WordleSolver.Colour>(wordLength) : null;
+
+        if (mode == Mode.eldroW)
+            for (int i = 0; i < wordLength; i++)
+            {
+                missingColours.Add(WordleSolver.Colour.Missing);
+            }
+        return missingColours;
+    }
     private void Update()
     {
+
         //! ANY LETTER IS PRESSED
         if (currentLetterToEdit < wordLength)
         {
@@ -68,6 +88,39 @@ public class WordleData : MonoBehaviour
         }
         guesses[currentGuessNumber] = currentGuessWord;
 
+        //! NUMBER IS PRESSED
+        if (mode == Mode.eldroW)
+        {
+            if (currentColourToEdit < wordLength)
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha1))
+                {
+                    print("one pressed");
+                    colours[currentGuessNumber][currentColourToEdit] = WordleSolver.Colour.Gray;
+                    currentColourToEdit++;
+                }
+                if (Input.GetKeyDown(KeyCode.Alpha2))
+                {
+                    colours[currentGuessNumber][currentColourToEdit] = WordleSolver.Colour.Yellow;
+                    currentColourToEdit++;
+                }
+                if (Input.GetKeyDown(KeyCode.Alpha3))
+                {
+                    colours[currentGuessNumber][currentColourToEdit] = WordleSolver.Colour.Green;
+                    currentColourToEdit++;
+                }
+            }
+            //! DELETE IS PRESSED
+            if (Input.GetKeyDown(KeyCode.Delete))
+            {
+                if (currentColourToEdit > 0)
+                {
+                    currentColourToEdit--;
+                }
+                colours[currentGuessNumber][currentColourToEdit] = WordleSolver.Colour.Missing;
+            }
+        }
+
         //! BACKSPACE IS PRESSED
         if (Input.GetKeyDown(KeyCode.Backspace))
         {
@@ -79,22 +132,91 @@ public class WordleData : MonoBehaviour
                 currentLetterToEdit--;
             }
         }
+        if (Input.GetKeyDown(KeyCode.End))
+        {
+            //restart
+        }
+        if (Input.GetKeyDown(KeyCode.Home))
+        {
+            if (currentGuessNumber == 0 && wordLength == 5)
+            {
+                currentGuessWord = "lares";
+                currentLetterToEdit = wordLength;
+            }
+            else
+            {
+                float highest = -1;
+                string bestWord = "zzzzz";
+                var copy = new Dictionary<string, float>(WordleSolver.wordRankings);
+                foreach (var wordToScore in copy)
+                {
+                    if (wordToScore.Value >= highest)
+                    {
+                        bestWord = wordToScore.Key;
+                        highest = wordToScore.Value;
+                    }
+                }
+                currentGuessWord = bestWord;
+                currentLetterToEdit = wordLength;
+            }
+        }
 
         //! ENTER IS PRESSED
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            print(PrintMap(WordleSolver.wordRankings));
-        }
         if (Input.GetKeyDown(KeyCode.Return))
         {
             print(currentGuessWord);
             if (!currentGuessWord.Contains(" ") && !(mode == Mode.eldroW && colours[currentGuessNumber].Contains(WordleSolver.Colour.Missing)) && WordleSolver.fastDictionary.Contains(currentGuessWord))
             {
-                if (mode != Mode.eldroW)
+                if (mode == Mode.Wordle)
                 {
                     colours.Add(WordleSolver.CharKnowledge.getColoursForWord(currentGuessWord, secret));
                 }
+                if (mode == Mode.Hardle)
+                {
+                    int topXprime = -1;
+                    List<WordleSolver.Colour> bestColours = new List<WordleSolver.Colour>();
+                    try
+                    {
+                        foreach (string word in WordleSolver.dictionary)
+                        {
+                            var localColours = WordleSolver.CharKnowledge.getColoursForWord(currentGuessWord, word);
+                            List<string> localOldPossibleSecrets = WordleSolver.possibleSecrets;
+                            //knowledge before info is just called "knowledge".
+                            var knowledgeAfterInfo = WordleSolver.CharKnowledge.fromGuess(currentGuessWord, localColours);
+                            knowledgeAfterInfo = WordleSolver.CharKnowledge.combineKnowledge(knowledgeAfterInfo, knowledge);
+                            knowledgeAfterInfo = WordleSolver.CharKnowledge.inferFully(wordLength, knowledgeAfterInfo);
+                            var localPerWord = Bits.LongsPerWord(WordleSolver.alphabet);
+
+                            ulong[] localMask = Bits.BitMask(knowledgeAfterInfo, WordleSolver.alphabet);
+                            ulong[] localMap = new ulong[WordleSolver.possibleSecrets.Count * localPerWord];
+
+                            int i = 0;
+                            foreach (string possibleSecret in localOldPossibleSecrets)
+                                Bits.BitMapTo(possibleSecret, WordleSolver.alphabet, localMap, i++ * localPerWord);
+
+                            int xprime = 0;
+                            for (int j = 0; j < localOldPossibleSecrets.Count; j++)
+                            {
+                                if (Bits.AndIs0(localMask, localMap, localPerWord * j))
+                                {
+                                    xprime++;
+                                }
+                            }
+                            if (xprime > topXprime)
+                            {
+                                topXprime = xprime;
+                                bestColours = new List<WordleSolver.Colour>(localColours);
+                            }
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError(e.Message);
+                    }
+                    colours.Add(bestColours);
+                }
                 var currentKnowledge = WordleSolver.CharKnowledge.fromGuess(currentGuessWord, colours[currentGuessNumber]);
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THIS IS NOT DEEP COPY (Right?)
                 var oldKnowledge = knowledge;
                 knowledge = WordleSolver.CharKnowledge.combineKnowledge(knowledge, currentKnowledge);
                 knowledge = WordleSolver.CharKnowledge.inferFully(wordLength, knowledge);
@@ -104,6 +226,7 @@ public class WordleData : MonoBehaviour
                 print("{" + sb + "}");
 
                 int oldPossiblesecretsCount = WordleSolver.possibleSecrets.Count;
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THIS IS NOT DEEP COPY (Right?)
                 List<string> oldPossibleSecrets = WordleSolver.possibleSecrets;
                 var perWord = Bits.LongsPerWord(WordleSolver.alphabet);
 
@@ -118,50 +241,46 @@ public class WordleData : MonoBehaviour
                 WordleSolver.possibleSecrets = WordleSolver.BitFilter(filterMask, map, WordleSolver.possibleSecrets);
                 WordleSolver.censorPossibleSecrets();
 
-                if (currentGuessWord == "above")
-                    UnityEngine.Debug.Log("actual secret: " + secret + ", filterMask for 'above':\n" + Bits.BitsToString(filterMask, WordleSolver.alphabet));
-
                 if (hasSolver)
                 {
-                    if (WordleSolver.wordRankings.ContainsKey(currentGuessWord))
+                    if (calcGuessStats)
                     {
-                        estimatedXPrimeToActual.Add((Mathf.RoundToInt(WordleSolver.wordRankings[currentGuessWord]), WordleSolver.possibleSecrets.Count));
-                    }
-                    else
-                    {
-                        float totalxprime = 0;
-
-                        ulong[] bits = new ulong[oldPossibleSecrets.Count * perWord];
-
-                        int i = 0;
-                        foreach (string possibleSecret in oldPossibleSecrets)
-                            Bits.BitMapTo(possibleSecret, WordleSolver.alphabet, bits, i++ * perWord);
-
-                        foreach (var possiblesecret in oldPossibleSecrets)
+                        if (WordleSolver.wordRankings.ContainsKey(currentGuessWord))
                         {
-                            var colours = WordleSolver.CharKnowledge.getColoursForWord(currentGuessWord, possiblesecret);
-                            var newKnowledge = WordleSolver.CharKnowledge.fromGuess(currentGuessWord, colours);
-                            newKnowledge = WordleSolver.CharKnowledge.combineKnowledge(newKnowledge, oldKnowledge);
-                            newKnowledge = WordleSolver.CharKnowledge.inferFully(WordleData.wordLength, newKnowledge);
-
-                            ulong[] mask = Bits.BitMask(newKnowledge, WordleSolver.alphabet);
-                            int xprime = 0;
-                            for (int j = 0; j < oldPossibleSecrets.Count; j++)
-                            {
-
-                                if (Bits.AndIs0(mask, bits, perWord * j))
-                                {
-                                    xprime++;
-                                }
-                                // else if (re.IsMatch(possibleSecrets[j]) && j != 0)
-                                // {
-                                //     UnityEngine.Debug.LogWarning("Regex matched but bits didn't on word " + possibleSecrets[j] + " with secret " + possiblesecret + " and with guess " + word + " and mask\n" + Bits.BitsToString(mask, alphabet) + "and with word representation\n" + Bits.BitsToString(bits, alphabet, perWord * j, '·'));
-                                // }
-                            }
-
-                            totalxprime += xprime;
+                            estimatedXPrimeToActual.Add((Mathf.RoundToInt(WordleSolver.wordRankings[currentGuessWord]), WordleSolver.possibleSecrets.Count));
                         }
-                        estimatedXPrimeToActual.Add((Mathf.RoundToInt(totalxprime / oldPossiblesecretsCount), WordleSolver.possibleSecrets.Count));
+                        else
+                        {
+                            float totalxprime = 0;
+
+                            ulong[] bits = new ulong[oldPossibleSecrets.Count * perWord];
+
+                            int i = 0;
+                            foreach (string possibleSecret in oldPossibleSecrets)
+                                Bits.BitMapTo(possibleSecret, WordleSolver.alphabet, bits, i++ * perWord);
+
+                            foreach (var possiblesecret in oldPossibleSecrets)
+                            {
+                                var colours = WordleSolver.CharKnowledge.getColoursForWord(currentGuessWord, possiblesecret);
+                                var newKnowledge = WordleSolver.CharKnowledge.fromGuess(currentGuessWord, colours);
+                                newKnowledge = WordleSolver.CharKnowledge.combineKnowledge(newKnowledge, oldKnowledge);
+                                newKnowledge = WordleSolver.CharKnowledge.inferFully(WordleData.wordLength, newKnowledge);
+
+                                ulong[] mask = Bits.BitMask(newKnowledge, WordleSolver.alphabet);
+                                int xprime = 0;
+                                for (int j = 0; j < oldPossibleSecrets.Count; j++)
+                                {
+
+                                    if (Bits.AndIs0(mask, bits, perWord * j))
+                                    {
+                                        xprime++;
+                                    }
+                                }
+
+                                totalxprime += xprime;
+                            }
+                            estimatedXPrimeToActual.Add((Mathf.RoundToInt(totalxprime / oldPossiblesecretsCount), WordleSolver.possibleSecrets.Count));
+                        }
                     }
 
                     WordleSolver.wordRankings.Clear();
@@ -173,6 +292,7 @@ public class WordleData : MonoBehaviour
                 //R.I.P. string bobTheBuilder: 2022-2022
                 currentGuessWord = new string(' ', wordLength);
                 currentLetterToEdit = 0;
+                currentColourToEdit = 0;
             }
         }
         currentLetterToEdit = Mathf.Clamp(currentLetterToEdit, 0, 9999);

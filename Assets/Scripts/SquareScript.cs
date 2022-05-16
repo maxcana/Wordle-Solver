@@ -63,7 +63,7 @@ public class SquareScript : MonoBehaviour
     }
     private void OnMouseDown()
     {
-        if(WordleData.mode == WordleData.Mode.eldroW && myrow <= WordleData.currentGuessNumber){
+        if(WordleData.mode == WordleData.Mode.eldroW && myrow == WordleData.currentGuessNumber){
              WordleData.colours[myrow][mycolumn] = nextColour(WordleData.colours[myrow][mycolumn]);
         }
     }
