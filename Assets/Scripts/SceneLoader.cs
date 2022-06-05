@@ -30,6 +30,7 @@ public class SceneLoader : MonoBehaviour
         WordleData.currentGuessNumber = 0;
         WordleData.currentGuessWord = new string(' ', WordleData.wordLength);
         WordleData.currentLetterToEdit = 0;
+        WordleData.stopTask = true;
         if (setMode)
         {
             hasSolver = solverToggle.isOn || mode == WordleData.Mode.eldroW;

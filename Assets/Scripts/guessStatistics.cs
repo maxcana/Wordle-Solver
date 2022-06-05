@@ -37,9 +37,9 @@ public class guessStatistics : MonoBehaviour
 
         }
         if(WordleData.estimatedXPrimeToActual.Count >= guessNumber + 1){
-        estLerp += (WordleData.estimatedXPrimeToActual[guessNumber].Item1 - estLerp) * Time.deltaTime * 5;
-        actLerp += (WordleData.estimatedXPrimeToActual[guessNumber].Item2 - actLerp) * Time.deltaTime * 5;
-        estimatedText.text = Mathf.Round(estLerp).ToString();
+        estLerp += (WordleData.estimatedXPrimeToActual[guessNumber].Item1 - estLerp) * Time.deltaTime * 3;
+        actLerp += (WordleData.estimatedXPrimeToActual[guessNumber].Item2 - actLerp) * Time.deltaTime * 3;
+        estimatedText.text = (Mathf.Round(estLerp * 10) / 10).ToString();
         actualText.text = Mathf.Round(actLerp).ToString();}
     }
 

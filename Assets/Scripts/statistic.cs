@@ -9,13 +9,14 @@ using System.Linq;
 public class statistic : MonoBehaviour
 {
     [SerializeField] public StatisticMode statToGet;
-    public enum StatisticMode { Accuracy, Bar, Iterations, WordsTried, TopXWords, SecretsLeft, PossibleWords, CurrentlyTriedWord, None }
+    public enum StatisticMode { Accuracy, Bar, Iterations, WordsTried, TopXWords, SecretsLeft, PossibleWords, CurrentlyTriedWord, DictionaryCount, None }
     TextMeshProUGUI textMesh;
     Image img;
     AddTexts addTexts;
-    float moveTowards = WordleSolver.possibleSecrets.Count;
+    float moveTowards;
     private void Start()
     {
+        moveTowards = 0;
         TryGetComponent<TextMeshProUGUI>(out textMesh);
         TryGetComponent<Image>(out img);
         addTexts = GameObject.FindGameObjectWithTag("Instantiater").GetComponent<AddTexts>();
@@ -38,7 +39,9 @@ public class statistic : MonoBehaviour
             case StatisticMode.WordsTried:
                 textMesh.text = WordleSolver.currentWordsTried + "/" + WordleSolver.dictionary.Count + " words tried";
                 break;
-
+            case StatisticMode.DictionaryCount:
+                textMesh.text = WordleSolver.dictionary.Count.ToString();
+                break;
             case StatisticMode.TopXWords:
                 if (addTexts.showOnlyTop != int.MaxValue)
                 {
@@ -51,7 +54,7 @@ public class statistic : MonoBehaviour
                 break;
 
             case StatisticMode.SecretsLeft:
-                moveTowards += (WordleSolver.possibleSecrets.Count - moveTowards) * Time.deltaTime * 30;
+                moveTowards += (WordleSolver.possibleSecrets.Count - moveTowards) * Mathf.Clamp01(Time.deltaTime) * 3;
                 textMesh.text = Mathf.Round(moveTowards).ToString();
                 break;
 
