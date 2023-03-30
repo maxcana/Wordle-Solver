@@ -12,6 +12,7 @@ public class SceneLoader : MonoBehaviour
     Toggle solverToggle;
     Toggle badWordsToggle;
     Toggle guessStatsToggle;
+    Toggle optimizeWordleToggle;
     public string sceneToLoad;
     Button button;
     private void Awake()
@@ -21,6 +22,7 @@ public class SceneLoader : MonoBehaviour
             guessStatsToggle = GameObject.FindWithTag("GuessStatsToggle").GetComponent<Toggle>();
             badWordsToggle = GameObject.FindWithTag("BadWordsToggle").GetComponent<Toggle>();
             solverToggle = GameObject.FindWithTag("SolverToggle").GetComponent<Toggle>();
+            optimizeWordleToggle = GameObject.FindWithTag("OptimizeWordleToggle").GetComponent<Toggle>();
         }
         button = GetComponent<Button>();
         button.onClick.AddListener(OnClick);
@@ -52,6 +54,10 @@ public class SceneLoader : MonoBehaviour
     public IEnumerator ThisUsedToBeLiterallyTheStupidestThingIHadToDoEverOnUnityButThankfullyICanYeildReturnNullIAmDoingThisBecauseSceneManagerLoadSceneLoadsItOnTheNextFrame()
     {
         yield return null;
+        if (optimizeWordleToggle.isOn)
+        {
+            WordleData.optimizeWordle = true;
+        }
         transform.GetChild(0).gameObject.SetActive(false);
         transform.GetChild(1).gameObject.SetActive(false);
         GetComponent<Image>().enabled = false;
@@ -63,6 +69,7 @@ public class SceneLoader : MonoBehaviour
         {
             WordleData.calcGuessStats = true;
         }
+        
         if (!hasSolver)
         {
             WordleData.hasSolver = false;

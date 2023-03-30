@@ -14,6 +14,7 @@ public class WordleData : MonoBehaviour
 {
     //Global Variables
     public enum Mode { Wordle, eldroW, Hardle }
+    public static bool optimizeWordle;
     public static bool calcGuessStats;
     public static bool censorBadWords = false;
     public static bool hasSolver;

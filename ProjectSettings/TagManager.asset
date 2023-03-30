@@ -13,6 +13,7 @@ TagManager:
   - BadWordsToggle
   - GuessStatsToggle
   - GuessStat
+  - OptimizeWordleToggle
   layers:
   - Default
   - TransparentFX

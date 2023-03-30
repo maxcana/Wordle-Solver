@@ -15394,8 +15394,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 477892035}
   m_HandleRect: {fileID: 477892034}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 1
+  m_Value: 1.000002
+  m_Size: 0.5383289
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -16492,7 +16492,11 @@ MonoBehaviour:
   m_text: test test test test test test test test test test test test test test test
     test test test test test test test test test test test test test test test test
     test test test test test test test test test test test test test test test test
-    test test test test test test test test test test + 3454 more
+    test test test test test test test test test test test test test test test test
+    test test test test test test test test test test test test test test test test
+    test test test test test test test test test test test test test test test test
+    test test test test test test test test test test test test test test test test
+    test test test + 3454 more
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8e8549428a0e17a428c2dc868f127875, type: 2}
   m_sharedMaterial: {fileID: 4560016423408299856, guid: 8e8549428a0e17a428c2dc868f127875, type: 2}
